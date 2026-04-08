@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js'
+import { towerPositions } from '../labyrinth/builder.js'
 
 export default function createPlayer(scene, camera, mazeGrid, renderer) {
   const controls = new PointerLockControls(camera, renderer.domElement)
@@ -37,10 +38,28 @@ export default function createPlayer(scene, camera, mazeGrid, renderer) {
   const headLight = new THREE.PointLight('#ffffff', 0.6, 10)
   camera.add(headLight)
 
-  function isBlocked(x, z) {
-    const gx = Math.floor(x / 2)
-    const gz = Math.floor(z / 2)
-    return mazeGrid[gx]?.[gz] ?? true
+  function isBlockedArea(x, z, radius = 0.45) {
+    const samples = [
+      [x + radius, z],
+      [x - radius, z],
+      [x, z + radius],
+      [x, z - radius]
+    ]
+    return samples.some(([sx, sz]) => {
+      const gx = Math.floor((sx + 1.025) / 2.05)
+      const gz = Math.floor((sz + 1.025) / 2.05)
+      return mazeGrid[gx]?.[gz] ?? true
+    })
+  }
+
+  function isNearTower(x, z, buffer = 0.6) {
+    return towerPositions.some(pos => {
+      const dx = x - pos.x
+      const dz = z - pos.z
+      const distSq = dx * dx + dz * dz
+      const minDist = pos.radius + buffer
+      return distSq < minDist * minDist
+    })
   }
 
   function update(delta) {
@@ -59,10 +78,20 @@ export default function createPlayer(scene, camera, mazeGrid, renderer) {
     const nextX = camera.position.x + move.x
     const nextZ = camera.position.z + move.z
 
-    if (!isBlocked(nextX, camera.position.z)) camera.position.x = nextX
-    if (!isBlocked(camera.position.x, nextZ)) camera.position.z = nextZ
+    if (
+      !isBlockedArea(nextX, camera.position.z) &&
+      !isNearTower(nextX, camera.position.z)
+    ) {
+      camera.position.x = nextX
+    }
+
+    if (
+      !isBlockedArea(camera.position.x, nextZ) &&
+      !isNearTower(camera.position.x, nextZ)
+    ) {
+      camera.position.z = nextZ
+    }
   }
 
   return { update }
 }
-
