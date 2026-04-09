@@ -2,6 +2,9 @@ import * as THREE from 'three'
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js'
 import { towerPositions } from '../labyrinth/builder.js'
 
+const CELL_SIZE = 2
+const PLAYER_RADIUS = 0.45
+
 export default function createPlayer(scene, camera, mazeGrid, renderer) {
   const controls = new PointerLockControls(camera, renderer.domElement)
   document.body.addEventListener('click', () => controls.lock())
@@ -33,22 +36,40 @@ export default function createPlayer(scene, camera, mazeGrid, renderer) {
     }
   }
 
-  camera.position.set(startX * 2, 1.6, startZ * 2)
+  camera.position.set(startX * CELL_SIZE, 1.6, startZ * CELL_SIZE)
 
   const headLight = new THREE.PointLight('#ffffff', 0.6, 10)
   camera.add(headLight)
 
-  function isBlockedArea(x, z, radius = 0.45) {
+  function worldToGrid(x, z) {
+    const gx = Math.floor((x + CELL_SIZE / 2) / CELL_SIZE)
+    const gz = Math.floor((z + CELL_SIZE / 2) / CELL_SIZE)
+    return { gx, gz }
+  }
+
+  function isWallCell(gx, gz) {
+    if (
+      gx < 0 ||
+      gz < 0 ||
+      gx >= mazeGrid.length ||
+      gz >= mazeGrid[0].length
+    ) {
+      return true
+    }
+    return mazeGrid[gx][gz]
+  }
+
+  function isBlockedArea(x, z, radius = PLAYER_RADIUS) {
     const samples = [
       [x + radius, z],
       [x - radius, z],
       [x, z + radius],
       [x, z - radius]
     ]
+
     return samples.some(([sx, sz]) => {
-      const gx = Math.floor((sx + 1.025) / 2.05)
-      const gz = Math.floor((sz + 1.025) / 2.05)
-      return mazeGrid[gx]?.[gz] ?? true
+      const { gx, gz } = worldToGrid(sx, sz)
+      return isWallCell(gx, gz)
     })
   }
 
@@ -71,6 +92,8 @@ export default function createPlayer(scene, camera, mazeGrid, renderer) {
     if (keys.s) move.z += 1
     if (keys.a) move.x -= 1
     if (keys.d) move.x += 1
+
+    if (move.lengthSq() === 0) return
 
     move.normalize().multiplyScalar(speed * delta)
     move.applyQuaternion(camera.quaternion)
@@ -95,3 +118,4 @@ export default function createPlayer(scene, camera, mazeGrid, renderer) {
 
   return { update }
 }
+
