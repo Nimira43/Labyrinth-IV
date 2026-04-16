@@ -6,6 +6,7 @@ import handleResize from './utils/resize.js'
 
 import generateLabyrinth from './labyrinth/generator.js'
 import buildLabyrinth from './labyrinth/builder.js'
+import updateTowers from './labyrinth/towerBeams.js'
 import createPlayer from './player/playerController.js'
 
 const renderer = createRenderer()
@@ -31,7 +32,6 @@ northArrow.rotation.x = Math.PI / 2
 scene.add(northArrow)
 
 const player = createPlayer(scene, camera, maze, renderer)
-
 const clock = new THREE.Clock()
 
 function tick() {
@@ -43,6 +43,8 @@ function tick() {
     camera.position.y + 2,
     camera.position.z
   )
+
+  updateTowers(scene, camera, labyrinthMesh.children)
 
   renderer.render(scene, camera)
   requestAnimationFrame(tick)

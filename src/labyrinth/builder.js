@@ -89,7 +89,12 @@ export default function buildLabyrinth(grid) {
           tower.receiveShadow = true
           group.add(tower)
 
-          towerPositions.push({ x: worldX, z: worldZ, radius: CELL_SIZE / 2 })
+          towerPositions.push({
+            x: worldX,
+            z: worldZ,
+            radius: CELL_SIZE / 2,
+            height
+          })
 
           if (Math.random() < 0.3) {
             const glow = new THREE.PointLight('#3399ff', 1, 15)
