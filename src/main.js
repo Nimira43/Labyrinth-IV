@@ -3,17 +3,20 @@ import createRenderer from './core/renderer.js'
 import createCamera from './core/camera.js'
 import createScene from './core/scene.js'
 import handleResize from './utils/resize.js'
-
 import generateLabyrinth from './labyrinth/generator.js'
 import buildLabyrinth from './labyrinth/builder.js'
 import updateTowers from './labyrinth/towerBeams.js'
 import createPlayer from './player/playerController.js'
+import { setupAudio, loadSounds } from './core/sound.js'
 
 const renderer = createRenderer()
 document.body.appendChild(renderer.domElement)
 
 const camera = createCamera()
 handleResize(renderer, camera)
+
+const listener = setupAudio(camera)
+const sounds = loadSounds(listener)
 
 const width = 101
 const height = 101
@@ -44,7 +47,7 @@ function tick() {
     camera.position.z
   )
 
-  updateTowers(scene, camera, labyrinthMesh.children)
+  updateTowers(scene, camera, labyrinthMesh.children, sounds)
 
   renderer.render(scene, camera)
   requestAnimationFrame(tick)
