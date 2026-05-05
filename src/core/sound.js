@@ -14,7 +14,6 @@ export function loadSounds(listener) {
     bgMusic.setBuffer(buffer)
     bgMusic.setLoop(true)
     bgMusic.setVolume(0.4)
-    bgMusic.play()
   })
 
   const towerFire = new THREE.Audio(listener)
@@ -23,5 +22,10 @@ export function loadSounds(listener) {
     towerFire.setVolume(0.7)
   })
 
+  document.body.addEventListener('click', () => {
+    if (!bgMusic.isPlaying) bgMusic.play()
+  })
+
   return { bgMusic, towerFire }
 }
+

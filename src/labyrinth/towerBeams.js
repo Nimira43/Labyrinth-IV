@@ -3,18 +3,18 @@ import { towerPositions } from './builder.js'
 
 const beamCooldown = 3000
 const beamRange = 10
-const beamDuration = 400
-const chargeTime = 1000 
+const chargeTime = 1000
 const towerState = new Map()
 
-export default function updateTowers(scene, camera, wallMeshes, sounds) {
-
+export default function updateTowers(scene, camera, wallMeshes, sounds, gameState) {
   const now = performance.now()
 
   towerPositions.forEach(pos => {
     let state = towerState.get(pos)
     if (!state) {
-      state = { lastShot: 0, charging: false }
+      const chargeLight = new THREE.PointLight('#ffff66', 0, 10)
+      scene.add(chargeLight)
+      state = { lastShot: 0, charging: false, chargeLight }
       towerState.set(pos, state)
     }
 
@@ -22,14 +22,20 @@ export default function updateTowers(scene, camera, wallMeshes, sounds) {
     const dz = camera.position.z - pos.z
     const distSq = dx * dx + dz * dz
 
-    if (distSq < beamRange * beamRange && now - state.lastShot > beamCooldown && !state.charging) {
+    if (
+      distSq < beamRange * beamRange &&
+      now - state.lastShot > beamCooldown &&
+      !state.charging
+    ) {
       state.charging = true
+
       const origin = new THREE.Vector3(pos.x, pos.height / 2, pos.z)
       const direction = new THREE.Vector3(
         camera.position.x - pos.x,
-        (camera.position.y + 0.5) - origin.y,
+        camera.position.y + 0.5 - origin.y,
         camera.position.z - pos.z
       ).normalize()
+
       const target = new THREE.Vector3(
         camera.position.x,
         camera.position.y + 0.5,
@@ -45,30 +51,33 @@ export default function updateTowers(scene, camera, wallMeshes, sounds) {
       const raycaster = new THREE.Raycaster(origin, direction)
       const hits = raycaster.intersectObjects(wallMeshes)
 
-      const chargeLight = new THREE.PointLight('#ffff66', 0, 10)
+      const chargeLight = state.chargeLight
       chargeLight.position.copy(origin)
-      scene.add(chargeLight)
+      chargeLight.intensity = 0
 
-      let intensity = 0
-      const chargeInterval = setInterval(() => {
-        intensity += 0.2
-        chargeLight.intensity = intensity
-        if (intensity >= 2) {
-          clearInterval(chargeInterval)
-          scene.remove(chargeLight)
+      let steps = 0
+      const maxSteps = 10
+      const stepTime = chargeTime / maxSteps
+
+      const interval = setInterval(() => {
+        steps++
+        chargeLight.intensity = (steps / maxSteps) * 2
+
+        if (steps >= maxSteps) {
+          clearInterval(interval)
+          chargeLight.intensity = 0
 
           if (hits.length === 0) {
             shootBeam(scene, origin, target, sounds)
-
-            playerHit(scene, camera.position)
+            playerHit(scene, camera.position, gameState)
           } else {
-            shootBeam(scene, origin, hits[0].point)
+            shootBeam(scene, origin, hits[0].point, sounds)
           }
 
           state.lastShot = performance.now()
           state.charging = false
         }
-      }, chargeTime / 10)
+      }, stepTime)
     }
   })
 }
@@ -103,9 +112,12 @@ function shootBeam(scene, origin, target, sounds) {
   setTimeout(() => scene.remove(beam), 1000)
 }
 
+function playerHit(scene, position, gameState) {
+  if (gameState) {
+    gameState.damage(10)
+    console.log('Player hit! Health:', gameState.health)
+  }
 
-function playerHit(scene, position) {
-  // electrical glow overlay
   const overlay = document.createElement('div')
   overlay.style.position = 'fixed'
   overlay.style.top = 0
@@ -135,4 +147,3 @@ function playerHit(scene, position) {
   scene.add(flash)
   setTimeout(() => scene.remove(flash), 250)
 }
-
