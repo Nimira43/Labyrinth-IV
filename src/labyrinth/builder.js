@@ -32,7 +32,6 @@ towerTextures.forEach(tex => {
 
 export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
   const group = new THREE.Group()
-
   const wallGeo = new THREE.BoxGeometry(CELL_SIZE + 0.02, 2, CELL_SIZE + 0.02)
   wallGeo.attributes.uv2 = wallGeo.attributes.uv
 
@@ -62,6 +61,7 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
   const roofGeo = new THREE.BoxGeometry(CELL_SIZE, 0.3, CELL_SIZE)
   const roofMatBase = wallMatBase.clone()
   roofMatBase.color.offsetHSL(0.05, -0.1, -0.1)
+
   const roofMatCollapsed = roofMatBase.clone()
   roofMatCollapsed.color.offsetHSL(0.1, -0.2, -0.2)
 
@@ -80,7 +80,7 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
   const towerGeoTemplate = new THREE.CylinderGeometry(
     CELL_SIZE / 2,
     CELL_SIZE / 2,
-    1,      
+    1,
     32,
     4,
     true
@@ -92,10 +92,11 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
   const totalCells = width * height
   let processed = 0
 
-  const YIELD_EVERY = 400 
+  const YIELD_EVERY = 400
 
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
+
       const worldX = x * CELL_SIZE
       const worldZ = y * CELL_SIZE
 
@@ -180,6 +181,7 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
           const tower = new THREE.Mesh(towerGeoTemplate, towerMat)
           tower.scale.y = heightVal
           tower.position.set(worldX, heightVal / 2, worldZ)
+
           tower.castShadow = true
           tower.receiveShadow = true
           group.add(tower)
@@ -191,12 +193,6 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
             height: heightVal
           })
 
-          if (Math.random() < 0.3) {
-            const glow = new THREE.PointLight('#3399ff', 1, 15)
-            glow.position.set(worldX, heightVal, worldZ)
-            glow.castShadow = false
-            group.add(glow)
-          }
         }
       }
 
@@ -208,11 +204,11 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
       }
     }
   }
+
   onProgress(100)
   return group
 }
 
 export default function buildLabyrinth(grid) {
-  return new THREE.Group() // placeholder 
+  return new THREE.Group()
 }
-

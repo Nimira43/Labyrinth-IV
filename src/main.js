@@ -5,14 +5,16 @@ import createScene from './core/scene.js'
 import handleResize from './utils/resize.js'
 import generateLabyrinth from './labyrinth/generator.js'
 import { buildLabyrinthAsync } from './labyrinth/builder.js'
-import updateTowers from './labyrinth/towerBeams.js'
 import createPlayer from './player/playerController.js'
 import { setupAudio, loadSounds } from './core/sound.js'
 import GameState from './core/GameState.js'
 import preloadAssets from './core/preloader.js'
 
 const renderer = createRenderer()
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
 document.body.appendChild(renderer.domElement)
+
 
 const camera = createCamera()
 handleResize(renderer, camera)
@@ -27,6 +29,7 @@ const gameState = new GameState()
 let player
 let labyrinthMesh
 let northArrow
+let framesSinceStart = 0
 
 const loadingEl = document.getElementById('loading')
 const progressBar = document.getElementById('progress-bar')
@@ -65,13 +68,11 @@ async function startGame() {
   player = createPlayer(scene, camera, maze, renderer)
 
   loadingText.textContent = 'Preparing renderer…'
-  renderer.shadowMap.enabled = false
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     await new Promise(r => requestAnimationFrame(r))
     renderer.render(scene, camera)
-    progressBar.style.width = `${90 + i}%`
+    progressBar.style.width = `${90 + i * 2}%`
   }
-  renderer.shadowMap.enabled = true
 
   loadingText.textContent = 'Ready. Press any key to begin.'
   progressBar.style.width = '100%'
@@ -89,6 +90,7 @@ async function startGame() {
   await new Promise(r => setTimeout(r, 1000))
   loadingEl.remove()
 
+  framesSinceStart = 0
   tick()
 }
 
@@ -102,8 +104,7 @@ function tick() {
     camera.position.z
   )
 
-  updateTowers(scene, camera, labyrinthMesh.children, sounds, gameState)
-
+  framesSinceStart++
   renderer.render(scene, camera)
   requestAnimationFrame(tick)
 }
