@@ -32,6 +32,7 @@ towerTextures.forEach(tex => {
 
 export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
   const group = new THREE.Group()
+
   const wallGeo = new THREE.BoxGeometry(CELL_SIZE + 0.02, 2, CELL_SIZE + 0.02)
   wallGeo.attributes.uv2 = wallGeo.attributes.uv
 
@@ -100,7 +101,12 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
       const worldX = x * CELL_SIZE
       const worldZ = y * CELL_SIZE
 
+      if (x === Math.floor(width / 2) && y === height - 1) {
+        continue
+      }
+
       if (grid[x][y]) {
+
         const baseHeight = 2
         const hasNeighbours =
           grid[x - 1]?.[y] ||
@@ -139,7 +145,7 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
           group.add(wall)
         }
 
-        if (hasNeighbours && Math.random() < 0.15) {
+        if (Math.random() < (hasNeighbours ? 0.45 : 0.25)) {
           const offsets = [
             [1, 0],
             [-1, 0],
@@ -149,19 +155,22 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
 
           offsets.forEach(([dx, dy]) => {
             if (grid[x + dx]?.[y + dy]) {
-              const collapsed = Math.random() < 0.3
+              const collapsed = Math.random() < 0.35
               const roof = new THREE.Mesh(
                 roofGeo,
                 collapsed ? roofMatCollapsed : roofMatBase
               )
+              roof.userData.isRotatingSlab = true
+              roof.userData.rotationSpeed = 0.1 + Math.random() * 0.3
+              roof.userData.rotationDirection = Math.random() < 0.5 ? 1 : -1
 
               roof.position.set(
                 worldX + dx * CELL_SIZE * 0.5,
-                1 + baseHeight * effectiveStack + 0.2,
+                1 + baseHeight * effectiveStack + 0.2 + (Math.random() * 0.3),
                 worldZ + dy * CELL_SIZE * 0.5
               )
 
-              roof.rotation.y = (Math.random() - 0.5) * 0.1
+              roof.rotation.y = (Math.random() - 0.5) * 0.4
               roof.castShadow = true
               roof.receiveShadow = true
 
@@ -175,6 +184,23 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
         }
 
       } else {
+        if (Math.random() < 0.03) {
+          const float = new THREE.Mesh(roofGeo, roofMatBase)
+
+          float.userData.isRotatingSlab = true
+          float.userData.rotationSpeed = 0.2 + Math.random() * 0.4
+
+          float.position.set(
+            worldX + (Math.random() - 0.5) * CELL_SIZE,
+            3 + Math.random() * 6,
+            worldZ + (Math.random() - 0.5) * CELL_SIZE
+          )
+          float.rotation.y = Math.random() * Math.PI
+          float.castShadow = true
+          float.receiveShadow = true
+          group.add(float)
+        }
+
         if (Math.random() < 0.02) {
           const heightVal = 10 + Math.random() * 20
 
@@ -192,7 +218,6 @@ export async function buildLabyrinthAsync(grid, onProgress = () => { }) {
             radius: CELL_SIZE / 2,
             height: heightVal
           })
-
         }
       }
 

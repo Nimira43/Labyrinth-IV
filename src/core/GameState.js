@@ -1,3 +1,5 @@
+// Largely redundant component. It will play a large part though in Labyrinth V.
+
 export default class GameState {
   constructor() {
     this.health = 100

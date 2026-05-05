@@ -24,7 +24,7 @@ export default function createScene(width, height) {
   scene.background = new THREE.Color('#1a0a00')
   scene.fog = new THREE.Fog('#1a0a00', 8, 90)   
 
-  const light = new THREE.DirectionalLight('#ffffff', 0.95) // was 0.7
+  const light = new THREE.DirectionalLight('#ffffff', 0.95) 
   light.position.set(20, 40, 20)
   light.castShadow = true
   light.shadow.mapSize.width = 2048
@@ -43,17 +43,17 @@ export default function createScene(width, height) {
 
   scene.add(light)
 
-  const skyGlow = new THREE.HemisphereLight('#442200', '#000000', 0.35) // was 0.25
+  const skyGlow = new THREE.HemisphereLight('#442200', '#000000', 0.35) 
   scene.add(skyGlow)
 
-  const ambient = new THREE.AmbientLight('#666666', 0.9) // was 0.6
+  const ambient = new THREE.AmbientLight('#666666', 0.9) 
   scene.add(ambient)
 
-  const torchLight = new THREE.PointLight('#ff9933', 1.2, 12) // was 0.8
+  const torchLight = new THREE.PointLight('#ff9933', 1.2, 12) 
   torchLight.position.set(1, 2, 1)
   scene.add(torchLight)
 
-  const rimLight = new THREE.PointLight('#3399ff', 0.25, 60) // subtle lift
+  const rimLight = new THREE.PointLight('#3399ff', 0.25, 60)
   rimLight.position.set(width, 30, height)
   scene.add(rimLight)
 
@@ -72,7 +72,7 @@ export default function createScene(width, height) {
     metalness: 0.0,
     roughness: 1.0,
     envMapIntensity: 0.0,
-    color: new THREE.Color(0x555555) // was 0x444444
+    color: new THREE.Color(0x555555) 
   })
 
   const floor = new THREE.Mesh(floorGeo, floorMat)

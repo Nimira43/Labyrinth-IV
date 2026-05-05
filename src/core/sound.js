@@ -16,16 +16,10 @@ export function loadSounds(listener) {
     bgMusic.setVolume(0.4)
   })
 
-  const towerFire = new THREE.Audio(listener)
-  loader.load('/sounds/sfx/bolt.wav', buffer => {
-    towerFire.setBuffer(buffer)
-    towerFire.setVolume(0.7)
-  })
-
   document.body.addEventListener('click', () => {
     if (!bgMusic.isPlaying) bgMusic.play()
   })
 
-  return { bgMusic, towerFire }
+  return { bgMusic }
 }
 

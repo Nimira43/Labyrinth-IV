@@ -18,7 +18,6 @@ export default async function preloadAssets(onProgress) {
 
   const sounds = [
     '/sounds/bg/bg-music.mp3',
-    '/sounds/sfx/bolt.wav'
   ]
 
   const total = textures.length + sounds.length

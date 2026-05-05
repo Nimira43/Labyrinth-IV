@@ -57,7 +57,17 @@ export default function generateLabyrinth(w, h) {
     if (grid[x][y]) grid[x][y] = false
   }
 
+  grid[Math.floor(w / 2)][h - 1] = false
+
+  let cx = Math.floor(w / 2)
+  let cy = h - 2
+  while (grid[cx][cy] === true && cy > 0) {
+    grid[cx][cy] = false
+    cy--
+  }
+
   return grid
 }
+
 
 

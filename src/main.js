@@ -10,11 +10,12 @@ import { setupAudio, loadSounds } from './core/sound.js'
 import GameState from './core/GameState.js'
 import preloadAssets from './core/preloader.js'
 
+const CELL_SIZE = 2
+
 const renderer = createRenderer()
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 document.body.appendChild(renderer.domElement)
-
 
 const camera = createCamera()
 handleResize(renderer, camera)
@@ -30,6 +31,8 @@ let player
 let labyrinthMesh
 let northArrow
 let framesSinceStart = 0
+let exitTrigger = null
+let tickHandle = null
 
 const loadingEl = document.getElementById('loading')
 const progressBar = document.getElementById('progress-bar')
@@ -67,6 +70,20 @@ async function startGame() {
 
   player = createPlayer(scene, camera, maze, renderer)
 
+  const exitGridX = Math.floor(width / 2)
+  const exitGridY = height - 1
+
+  exitTrigger = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 3, 2),
+    new THREE.MeshBasicMaterial({ visible: false })
+  )
+  exitTrigger.position.set(
+    exitGridX * CELL_SIZE,
+    1.5,
+    exitGridY * CELL_SIZE
+  )
+  scene.add(exitTrigger)
+
   loadingText.textContent = 'Preparing renderer…'
   for (let i = 0; i < 5; i++) {
     await new Promise(r => requestAnimationFrame(r))
@@ -94,9 +111,61 @@ async function startGame() {
   tick()
 }
 
+function showWinModal() {
+  const modal = document.createElement('div')
+  modal.style.position = 'fixed'
+  modal.style.inset = '0'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.background = 'rgba(0, 0, 0, 0.92)'
+  modal.style.backdropFilter = 'blur(4px)'
+  modal.style.color = '#fff'
+  modal.style.fontFamily = 'system-ui, sans-serif'
+  modal.style.fontSize = '3rem'
+  modal.style.textAlign = 'center'
+  modal.style.zIndex = '9999'
+  modal.style.opacity = '0'
+  modal.style.transition = 'opacity 1.2s ease-out'
+
+  modal.innerHTML = `
+    <div style="
+      padding: 40px 60px;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: rgba(20,20,30,0.6);
+      box-shadow: 0 0 40px rgba(255,255,255,0.15);
+      border-radius: 12px;
+      animation: pulseGlow 3s infinite ease-in-out;
+    ">
+      <div style="font-size: 3.2rem; letter-spacing: 2px; margin-bottom: 10px;">
+        YOU ESCAPED
+      </div>
+      <div style="font-size: 1.3rem; opacity: 0.8;">
+        The Labyrinth releases you from its shadows.
+      </div>
+    </div>
+  `
+
+  document.body.appendChild(modal)
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1'
+  })
+
+  if (tickHandle) {
+    cancelAnimationFrame(tickHandle)
+  }
+}
+
+
 function tick() {
   const delta = clock.getDelta()
   player.update(delta)
+  labyrinthMesh.traverse(obj => {
+    if (obj.userData.isRotatingSlab) {
+      obj.rotation.y += obj.userData.rotationSpeed * obj.userData.rotationDirection * delta
+    }
+  })
 
   northArrow.position.set(
     camera.position.x,
@@ -104,9 +173,18 @@ function tick() {
     camera.position.z
   )
 
+  if (exitTrigger && !gameState.portalUnlocked) {
+    const dist = camera.position.distanceTo(exitTrigger.position)
+    if (dist < CELL_SIZE) {
+      gameState.portalUnlocked = true
+      showWinModal()
+      return
+    }
+  }
+
   framesSinceStart++
   renderer.render(scene, camera)
-  requestAnimationFrame(tick)
+  tickHandle = requestAnimationFrame(tick)
 }
 
 requestAnimationFrame(startGame)
