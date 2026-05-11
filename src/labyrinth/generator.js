@@ -5,7 +5,6 @@ export default function generateLabyrinth(w, h) {
 
   const width = w % 2 === 0 ? w - 1 : w
   const height = h % 2 === 0 ? h - 1 : h
-
   const stack = []
   const startX = 1
   const startY = 1
@@ -23,7 +22,6 @@ export default function generateLabyrinth(w, h) {
   while (stack.length > 0) {
     const current = stack[stack.length - 1]
     const { x, y } = current
-
     const shuffled = directions.slice().sort(() => Math.random() - 0.5)
     let carved = false
 
